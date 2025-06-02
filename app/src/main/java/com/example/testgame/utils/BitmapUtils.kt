@@ -1,4 +1,4 @@
-package com.example.testgame.Utils
+package com.example.testgame.utils
 
 import android.content.Context
 import android.graphics.Bitmap

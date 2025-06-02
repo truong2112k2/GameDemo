@@ -99,5 +99,9 @@ dependencies {
 
     implementation(libs.accompanist.placeholder.material)
 
+    implementation("io.coil-kt:coil-compose:2.6.0") // Hoặc phiên bản mới nhất
+
+
+
 
 }

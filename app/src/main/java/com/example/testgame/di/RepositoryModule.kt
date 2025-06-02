@@ -1,7 +1,7 @@
 package com.example.testgame.di
 
-import com.example.testgame.impl.GameRepositoryImpl
-import com.example.testgame.repository.IGameRepository
+import com.example.testgame.data.impl.GameRepositoryImpl
+import com.example.testgame.data.repository.IGameRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
