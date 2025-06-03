@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.testgame.mapper.toObstacle
 import com.example.testgame.view.theme.TestGameTheme
 import com.example.testgame.viewmodel.GameViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -26,11 +27,16 @@ class MainActivity : ComponentActivity() {
             val vm = hiltViewModel<GameViewModel>()
 
             val isGameOver by vm.isGameOver.collectAsState()
+
+            val point by vm.score.collectAsState()
             GameScreen(
                 context = context,
                 plane = vm.plane,
-                obstacles = vm.obstacles,
+                obstacles = vm.obstacles.map { it.toObstacle() },
+                bullets = vm.bullets,
                 isGameOver = isGameOver,
+                explosions = vm.explosions,
+                point = point,
                 onEventClick = { vm.handleEventClick(it) }
             )
         }

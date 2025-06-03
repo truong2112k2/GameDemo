@@ -12,6 +12,6 @@ sealed class ClickEvent {
 
     data class MovePlayerByDrag(val dx: Float, val dy: Float) : ClickEvent()
 
-    data class StartGameLoop(val context: Context): ClickEvent()
+    data object ShootBullet: ClickEvent()
 
 }

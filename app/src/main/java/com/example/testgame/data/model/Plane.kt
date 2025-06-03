@@ -8,7 +8,7 @@ data class Plane(
     val size: Float = 145f,
     val speed: Float = 30f,
     val image: Int = R.drawable.ic_plane,
-){
+) {
 
 }
 

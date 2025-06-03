@@ -11,13 +11,19 @@ import androidx.core.content.ContextCompat
 object BitmapUtils {
 
     // Chuyển đổi Drawable ID (như R.drawable.ic_plane) thành Bitmap
-    fun drawableToBitmap(context: Context, @androidx.annotation.DrawableRes drawableId: Int, targetWidth: Int, targetHeight: Int): Bitmap? {
+    fun drawableToBitmap(
+        context: Context,
+        @androidx.annotation.DrawableRes drawableId: Int,
+        targetWidth: Int,
+        targetHeight: Int
+    ): Bitmap? {
         val drawable: Drawable? = ContextCompat.getDrawable(context, drawableId)
 
         return when (drawable) {
             is BitmapDrawable -> {
                 Bitmap.createScaledBitmap(drawable.bitmap, targetWidth, targetHeight, true)
             }
+
             is VectorDrawable -> {
                 val bitmap = Bitmap.createBitmap(targetWidth, targetHeight, Bitmap.Config.ARGB_8888)
                 val canvas = Canvas(bitmap)
@@ -25,6 +31,7 @@ object BitmapUtils {
                 drawable.draw(canvas)
                 bitmap
             }
+
             else -> null
         }
     }

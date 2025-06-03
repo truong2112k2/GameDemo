@@ -2,6 +2,9 @@ package com.example.testgame.data.impl
 
 import android.content.Context
 import android.util.Log
+import com.example.testgame.data.GameUpdateResult
+import com.example.testgame.data.model.Bullet
+import com.example.testgame.data.model.Explode
 import com.example.testgame.data.model.Obstacle.FlyingSaucer
 import com.example.testgame.data.model.Obstacle.Obstacle
 import com.example.testgame.data.model.Obstacle.Rocket
@@ -18,19 +21,21 @@ import kotlin.math.min
 class GameRepositoryImpl @Inject constructor(
 
 ) : IGameRepository {
+
     override fun updateGameState(
         yourPlane: Plane,
         obstacles: List<Obstacle>,
+        bullets: List<Bullet>,
         screenHeight: Float,
         screenWidth: Float,
         context: Context?
-    ): Pair<List<Obstacle>, Boolean> {
+    ): GameUpdateResult {
 
         var gameOver = false
+        val explosions = mutableListOf<Explode>()
 
-        val updatedObstacles = obstacles.map {
-            it.copy(y = it.y + it.speed)
-        }
+        val updatedObstacles = obstacles.map { it.copy(y = it.y + it.speed) }
+        val updatedBullets = bullets.map { it.copy(y = it.y - it.speed) }
 
         val planeBitmap = context?.let {
             BitmapUtils.drawableToBitmap(
@@ -43,61 +48,37 @@ class GameRepositoryImpl @Inject constructor(
 
         if (planeBitmap != null) {
             for (item in updatedObstacles) {
-
                 val obstacleBitmap = BitmapUtils.drawableToBitmap(
                     context,
                     item.image,
                     item.size.toInt(),
                     item.size.toInt()
                 )
-
-                val planeRectX = yourPlane.x
-                val planeRectY = yourPlane.y
-                val planeRectWidth = yourPlane.size
-                val planeRectHeight = yourPlane.size
-
-                val obstacleRectX = item.x
-                val obstacleRectY = item.y
-                val obstacleRectWidth = item.size
-                val obstacleRectHeight = item.size
-                // Kiểm tra va chạm bounding box (AABB)
                 val collideX =
-                    planeRectX < obstacleRectX + obstacleRectWidth && planeRectX + planeRectWidth > obstacleRectX
+                    yourPlane.x < item.x + item.size && yourPlane.x + yourPlane.size > item.x
                 val collideY =
-                    planeRectY < obstacleRectY + obstacleRectHeight && planeRectY + planeRectHeight > obstacleRectY
+                    yourPlane.y < item.y + item.size && yourPlane.y + yourPlane.size > item.y
 
                 if (collideX && collideY) {
-                    val interSectionLeft = max(planeRectX, obstacleRectX).toInt()
-                    val interSectionTop = max(planeRectY, obstacleRectY).toInt()
-                    val intersectionRight =
-                        min(planeRectX + planeRectWidth, obstacleRectX + obstacleRectWidth).toInt()
-                    val intersectionBottom = min(
-                        planeRectY + planeRectHeight,
-                        obstacleRectY + obstacleRectHeight
-                    ).toInt()
+                    val left = max(yourPlane.x, item.x).toInt()
+                    val top = max(yourPlane.y, item.y).toInt()
+                    val right = min(yourPlane.x + yourPlane.size, item.x + item.size).toInt()
+                    val bottom = min(yourPlane.y + yourPlane.size, item.y + item.size).toInt()
 
-                    for (x in interSectionLeft until intersectionRight) {
-                        for (y in interSectionTop until intersectionBottom) {
-                            val planeLocalX = (x - planeRectX).toInt()
-                            val planeLocalY = (y - planeRectY).toInt()
+                    for (x in left until right) {
+                        for (y in top until bottom) {
+                            val px = (x - yourPlane.x).toInt()
+                            val py = (y - yourPlane.y).toInt()
+                            val ox = (x - item.x).toInt()
+                            val oy = (y - item.y).toInt()
 
-                            val obstacleLocalX = (x - obstacleRectX).toInt()
-                            val obstacleLocalY = (y - obstacleRectY).toInt()
+                            val planePixel = BitmapUtils.isPixelSolid(planeBitmap, px, py)
+                            val obsPixel = BitmapUtils.isPixelSolid(obstacleBitmap, ox, oy)
 
-                            val planePixelSolid =
-                                BitmapUtils.isPixelSolid(planeBitmap, planeLocalX, planeLocalY)
-
-                            val obstaclePixelSolid = BitmapUtils.isPixelSolid(
-                                obstacleBitmap,
-                                obstacleLocalX,
-                                obstacleLocalY
-                            )
-
-                            if (planePixelSolid && obstaclePixelSolid) {
+                            if (planePixel && obsPixel) {
                                 gameOver = true
                                 break
                             }
-
                         }
                         if (gameOver) break
                     }
@@ -106,65 +87,73 @@ class GameRepositoryImpl @Inject constructor(
             }
         }
 
-        val visibleObstacles = updatedObstacles.filter {
-            it.y <= screenHeight
-        }
-        val randomObstacle = (0..100).random()
-        val newObstacles = if (randomObstacle < 5) {
-            val newObstacle = when (randomObstacle) {
-                0 -> {
-                    Rocket(
-                        x = (0..screenWidth.toInt()).random().toFloat(),
-                        y = 0f,
-                    )
-                }
+        val destroyed = mutableSetOf<Obstacle>()
+        val remainingObstacles = mutableListOf<Obstacle>()
 
-                1 -> {
-                    FlyingSaucer(
-                        x = (0..screenWidth.toInt()).random().toFloat(),
-                        y = 0f,
-                    )
-                }
+        var destroyedCount = 0
 
-                2 -> {
-                    Stone(
-                        x = (0..screenWidth.toInt()).random().toFloat(),
-                        y = 0f,
-                    )
-                }
+        for (obstacle in updatedObstacles) {
+            var isHit = false
+            for (bullet in updatedBullets) {
+                val collideX = bullet.x < obstacle.x + obstacle.size && bullet.x + bullet.size > obstacle.x
+                val collideY = bullet.y < obstacle.y + obstacle.size && bullet.y + bullet.size > obstacle.y
 
-                3 -> {
-                    Stone(
-                        x = (0..screenWidth.toInt()).random().toFloat(),
-                        y = 0f,
-                    )
-                }
-
-                4 -> {
-                    Rocket(
-                        x = (0..screenWidth.toInt()).random().toFloat(),
-                        y = 0f,
-                    )
-                }
-
-                else -> {
-                    Rocket(
-                        x = (0..screenWidth.toInt()).random().toFloat(),
-                        y = 0f,
-                    )
+                if (collideX && collideY) {
+                    isHit = true
+                    explosions.add(Explode(x = obstacle.x, y = obstacle.y, size = obstacle.size.toInt()))
+                    destroyedCount++
+                    break
                 }
             }
-            Log.d("312321", newObstacle.toString())
 
-            visibleObstacles + newObstacle
-
-        } else {
-            visibleObstacles
-
+            if (!isHit && obstacle.y <= screenHeight) {
+                remainingObstacles.add(obstacle)
+            }
         }
 
-        return Pair(newObstacles, gameOver)
 
+        val remainingBullets = updatedBullets.filter { bullet ->
+            bullet.y > 0 && !destroyed.any {
+                bullet.x < it.x + it.size && bullet.x + bullet.size > it.x &&
+                        bullet.y < it.y + it.size && bullet.y + bullet.size > it.y
+            }
+        }
+
+        val random = (0..100).random()
+
+        val listObstacle = listOf(
+            Obstacle(
+                x = (0..screenWidth.toInt()).random().toFloat(),
+                y = 0f
+            ),
+            FlyingSaucer(
+                x = (0..screenWidth.toInt()).random().toFloat(),
+                y = 0f
+            ),
+            Rocket(
+                x = (0..screenWidth.toInt()).random().toFloat(),
+                y = 0f
+            ),
+            Stone(
+                x = (0..screenWidth.toInt()).random().toFloat(),
+                y = 0f
+            )
+        )
+        val newObstacles = if (random < 5) {
+            val newObstacle = listObstacle.random()
+            remainingObstacles + newObstacle
+        } else {
+            remainingObstacles
+        }
+        Log.d("312321", destroyedCount.toString())
+
+        return GameUpdateResult(
+            obstacles = newObstacles,
+            bullets = remainingBullets,
+            gameOver = gameOver,
+            explosions = explosions,
+            point = destroyedCount
+        )
     }
 
 

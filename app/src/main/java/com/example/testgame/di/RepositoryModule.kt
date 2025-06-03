@@ -4,7 +4,6 @@ import com.example.testgame.data.impl.GameRepositoryImpl
 import com.example.testgame.data.repository.IGameRepository
 import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
