@@ -8,5 +8,5 @@ data class Bullet(
     var y: Float,
     val size: Float = 14f,
     val speed: Float = 8f,
-    val image: Int = R.drawable.ic_bullet
+    val image: Int = R.drawable.ic_bullet_plane
 )

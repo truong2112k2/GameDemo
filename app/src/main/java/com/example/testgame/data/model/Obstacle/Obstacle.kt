@@ -1,6 +1,7 @@
 package com.example.testgame.data.model.Obstacle
 
 import com.example.testgame.R
+import com.example.testgame.common.ObstacleBehavior
 import java.util.UUID
 
 open class Obstacle(
@@ -9,15 +10,18 @@ open class Obstacle(
     var y: Float = 0f,
     val size: Float = 64f,
     val speed: Float = 8f,
-    val image: Int = R.drawable.ic_rocket
+    val image: Int = R.drawable.ic_rocket,
+
 ) {
-    open fun copy(
+
+
+     open fun copy(
         id: String = this.id,
         x: Float = this.x,
         y: Float = this.y,
         size: Float = this.size,
         speed: Float = this.speed,
-        image: Int = this.image
+        image: Int = this.image,
     ): Obstacle {
         return Obstacle(id, x, y, size, speed, image)
     }
@@ -28,6 +32,12 @@ open class Obstacle(
 
     override fun hashCode(): Int {
         return id.hashCode()
+    }
+
+    open fun updatePosition(): Obstacle {
+
+
+        return copy(y = this.y + this.speed)
     }
 }
 

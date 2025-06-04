@@ -9,11 +9,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.testgame.data.model.Bullet
+import com.example.testgame.data.model.Obstacle.BattleShip.EnemyBullet
 import com.example.testgame.data.model.Plane
 import com.example.testgame.data.repository.IGameRepository
 import com.example.testgame.mapper.toBullet
+import com.example.testgame.mapper.toBulletModelUI
 import com.example.testgame.mapper.toBulletModelUi
+import com.example.testgame.mapper.toEnemyBullet
 import com.example.testgame.mapper.toExplodeModelUI
 import com.example.testgame.mapper.toObstacle
 import com.example.testgame.mapper.toObstacleModel
@@ -40,6 +42,7 @@ class GameViewModel @Inject constructor(
 
     val obstacles = mutableStateListOf<ObstacleModelUI>()
     val bullets = mutableStateListOf<BulletModelUI>()
+    val enemyBullets = mutableStateListOf<BulletModelUI>()
 
 
     private var screenWidth by mutableFloatStateOf(0f)
@@ -66,6 +69,9 @@ class GameViewModel @Inject constructor(
             bullets.map {
                 it.toBullet()
             },
+            enemyBullets = enemyBullets.map {
+                it.toEnemyBullet()
+            },
             screenHeight,
             screenWidth,
             context
@@ -81,11 +87,16 @@ class GameViewModel @Inject constructor(
             bullets.clear()
             bullets.addAll(result.bullets.map { it.toBulletModelUi() })
         }
-
+        enemyBullets.clear()
+        enemyBullets.addAll(result.enemyBullets.map {
+            it.toBulletModelUI()
+        })
         result.explosions.forEach { addExplosion(it.toExplodeModelUI()) }
 
         _score.value += result.point
         _isGameOver.value = result.gameOver
+
+
 
         Log.d("SCORE_VM", "Score hiện tại: ${_score.value}, tăng thêm: ${result.point}")
 
@@ -111,6 +122,7 @@ class GameViewModel @Inject constructor(
     private fun resetGame(context: Context, width: Float, height: Float) {
         obstacles.clear()
         bullets.clear()
+        enemyBullets.clear()
         explosions.clear()
         _score.value = 0
         _isGameOver.value = false
@@ -120,29 +132,19 @@ class GameViewModel @Inject constructor(
 
 
     private fun movePlayerByDrag(dx: Float, dy: Float) {
-        plane.x += dx
-        plane.y += dy
-
-        // Giữ máy bay trong giới hạn màn hình
-        if (plane.x < 0) plane.x = 0f
-        if (plane.y < 0) plane.y = 0f
-        if (plane.x + plane.size > screenWidth) plane.x = screenWidth - plane.size
-        if (plane.y + plane.size > screenHeight) plane.y = screenHeight - plane.size
+        plane.toPlane().apply {
+            moveBy(dx, dy, screenWidth, screenHeight)
+            plane = this.toPlaneModelUi()
+        }
     }
 
+
     private fun shootBullet() {
-
         if (_isGameOver.value) return
-
         if (bullets.size < 50) {
-            val bulletX = plane.x + plane.size / 2f - 16f
-            val bulletY = plane.y - 32f
-            bullets.add(Bullet(x = bulletX, y = bulletY).toBulletModelUi())
+            val bullet = plane.toPlane().shoot()
+            bullets.add(bullet.toBulletModelUi())
         }
-//            val bulletX = plane.x + plane.size / 2f - 16f
-//            val bulletY = plane.y - 32f
-//            bullets.add(BulletModelUI(x = bulletX, y = bulletY))
-
     }
 
     private fun addExplosion(explosion: ExplodeModelUI) {

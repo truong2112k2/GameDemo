@@ -2,7 +2,7 @@ package com.example.testgame.view.model
 
 import com.example.testgame.R
 
-class PlaneModelUI(
+data class PlaneModelUI(
     var x: Float = 0f,
     var y: Float = 0f,
     val size: Float = 145f,

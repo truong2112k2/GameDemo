@@ -2,7 +2,7 @@ package com.example.testgame.view.model
 
 import com.example.testgame.R
 
-class ExplodeModelUI(
+data class ExplodeModelUI(
     val x: Float,
     val y: Float,
     val size: Int,

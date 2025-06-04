@@ -32,8 +32,9 @@ class MainActivity : ComponentActivity() {
             GameScreen(
                 context = context,
                 plane = vm.plane,
-                obstacles = vm.obstacles.map { it.toObstacle() },
+                obstacles = vm.obstacles,
                 bullets = vm.bullets,
+                enemyBullets = vm.enemyBullets,
                 isGameOver = isGameOver,
                 explosions = vm.explosions,
                 point = point,

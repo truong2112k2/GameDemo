@@ -1,8 +1,14 @@
 package com.example.testgame.view.components
 
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
@@ -15,6 +21,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.unit.dp
+import com.example.testgame.view.model.PlaneModelUI
 
 
 @Composable
@@ -84,3 +92,64 @@ fun DrawScope.drawExplosions(explosionsMap: List<Pair<Painter, Triple<Float, Flo
         }
     }
 }
+
+fun DrawScope.drawEnemyBullets(bullets: List<Pair<Painter, Triple<Float, Float, Float>>>) {
+    bullets.forEach { (painter, position) ->
+        val (x, y, size) = position
+        translate(left = x, top = y) {
+            with(painter) {
+                draw(size = Size(size, size))
+            }
+        }
+    }
+}
+
+
+
+@Composable
+fun GameCanvas(
+    planePainter: Painter,
+    plane: PlaneModelUI,
+    imageMap: List<Pair<Painter, Triple<Float, Float, Float>>>,
+    bulletMap: List<Pair<Painter, Triple<Float, Float, Float>>>,
+    enemyBulletMap: List<Pair<Painter, Triple<Float, Float, Float>>>,
+
+    explosionsMap: List<Pair<Painter, Triple<Float, Float, Int>>>
+) {
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        drawPlane(plane.x, plane.y, plane.size, planePainter)
+        drawObstacles(imageMap)
+        drawBullets(bulletMap)
+        drawEnemyBullets(enemyBulletMap)
+
+        drawExplosions(explosionsMap)
+
+    }
+}
+
+@Composable
+fun GameTopBar(
+    countDownTime: Int,
+    point: Int,
+    onResetClick: () -> Unit,
+    modifier: Modifier
+) {
+    Box(
+        modifier = modifier
+
+
+    ) {
+        CustomTopBar(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.Black.copy(alpha = 0.3f))
+                .padding(8.dp),
+            time = countDownTime,
+            point = point,
+            onClick = onResetClick
+        )
+    }
+}
+
+
+
