@@ -1,9 +1,11 @@
 package com.example.testgame.mapper
 
-import com.example.testgame.data.model.Obstacle.BattleShip.ShootEnemy
+import com.example.testgame.R
 import com.example.testgame.data.model.Obstacle.FlyingSaucer
 import com.example.testgame.data.model.Obstacle.Obstacle
 import com.example.testgame.data.model.Obstacle.Rocket
+import com.example.testgame.data.model.Obstacle.ShootEnemy.LightningPlane
+import com.example.testgame.data.model.Obstacle.ShootEnemy.RaptorPlane
 import com.example.testgame.data.model.Obstacle.Stone
 import com.example.testgame.view.model.ObstacleModelUI
 
@@ -40,11 +42,18 @@ fun ObstacleModelUI.toObstacle(): Obstacle {
             image = this.image
         )
 
-        "ShootEnemy" -> ShootEnemy(
+        "RaptorPlane" -> RaptorPlane(
             x = this.x,
             y = this.y,
             size = this.size,
             image = this.image
+        )
+
+        "LightningPlane" -> LightningPlane(
+            x = this.x,
+            y = this.y,
+            size = this.size,
+            image = this.image,
         )
 
         else -> Obstacle(

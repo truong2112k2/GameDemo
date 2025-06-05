@@ -1,7 +1,6 @@
 package com.example.testgame.view.model
 
 import com.example.testgame.R
-import com.example.testgame.common.ObstacleBehavior
 
 data class ObstacleModelUI(
     var x: Float = 0f,

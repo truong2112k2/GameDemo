@@ -1,4 +1,4 @@
-package com.example.testgame.viewmodel
+package com.example.testgame.viewmodel.game_normal
 
 import android.content.Context
 

@@ -1,4 +1,4 @@
-package com.example.testgame.viewmodel
+package com.example.testgame.viewmodel.game_medium
 
 import android.content.Context
 import android.util.Log
@@ -9,7 +9,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.testgame.data.model.Obstacle.BattleShip.EnemyBullet
 import com.example.testgame.data.model.Plane
 import com.example.testgame.data.repository.IGameRepository
 import com.example.testgame.mapper.toBullet
@@ -25,6 +24,7 @@ import com.example.testgame.view.model.BulletModelUI
 import com.example.testgame.view.model.ExplodeModelUI
 import com.example.testgame.view.model.ObstacleModelUI
 import com.example.testgame.view.model.PlaneModelUI
+import com.example.testgame.viewmodel.game_normal.ClickEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,11 +32,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-
 @HiltViewModel
-class GameViewModel @Inject constructor(
+class GameHardVM @Inject constructor(
     private val gameIGameRepository: IGameRepository
-) : ViewModel() {
+
+): ViewModel() {
 
     var plane by mutableStateOf(PlaneModelUI())
 
@@ -61,7 +61,7 @@ class GameViewModel @Inject constructor(
 
 
     private fun updateGameState(context: Context) {
-        val result = gameIGameRepository.updateGameState(
+        val result = gameIGameRepository.updateStateGameHard(
             plane.toPlane(),
             obstacles.map {
                 it.toObstacle()
@@ -98,7 +98,7 @@ class GameViewModel @Inject constructor(
 
 
 
-        Log.d("SCORE_VM", "Score hiện tại: ${_score.value}, tăng thêm: ${result.point}")
+        Log.d("SCORE_VM_updateGameState", "Score hiện tại: ${_score.value}, tăng thêm: ${result.point}")
 
 
     }

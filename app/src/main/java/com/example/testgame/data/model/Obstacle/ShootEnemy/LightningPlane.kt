@@ -1,26 +1,24 @@
-package com.example.testgame.data.model.Obstacle.BattleShip
-
+package com.example.testgame.data.model.Obstacle.ShootEnemy
 
 import com.example.testgame.R
 import com.example.testgame.data.model.Obstacle.Obstacle
 import java.util.UUID
 
-class ShootEnemy(
-     id: String = UUID.randomUUID().toString(),
-     x: Float = 0f,
-     y: Float = 0f,
-     size: Float = 80f,
-     speed: Float = listOf(10f, 20f, 30f, 40f, 50f).random(),
+class LightningPlane(
+    id: String = UUID.randomUUID().toString(),
+    x: Float = 0f,
+    y: Float = 0f,
+    size: Float = 100f,
+    speed: Float = listOf(10f, 20f, 30f, 40f, 50f).random(),
 
-     image: Int = R.drawable.ic_spaceship,
-) : Obstacle( id,  x, y, size, speed, image) {
+    image: Int = R.drawable.ic_lightning,
+) : Obstacle(id, x, y, size, speed, image) {
 
-
-
-    fun shoot(): EnemyBullet {
+    fun shoot(
+    ): EnemyBullet {
         val bulletX = x + size / 2f - 16f
         val bulletY = y + size
-        return EnemyBullet(x = bulletX, y = bulletY)
+        return EnemyBullet(x = bulletX, y = bulletY, size = 50f, image = R.drawable.ic_boom)
     }
 
     override fun copy(
@@ -31,7 +29,7 @@ class ShootEnemy(
         speed: Float,
         image: Int
     ): Obstacle {
-        return ShootEnemy(
+        return LightningPlane(
             id,
             x,
             y,
@@ -45,7 +43,7 @@ class ShootEnemy(
     override fun updatePosition(): Obstacle {
         val newX = x + (3 * kotlin.math.sin(y / 30)).toFloat()
         val newY = y + (1.5 * kotlin.math.sin(x / 50)).toFloat()
-        return ShootEnemy(
+        return LightningPlane(
             x = newX,
             y = newY,
             size = size,

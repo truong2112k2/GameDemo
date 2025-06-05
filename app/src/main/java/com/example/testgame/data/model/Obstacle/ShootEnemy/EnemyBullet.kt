@@ -1,4 +1,4 @@
-package com.example.testgame.data.model.Obstacle.BattleShip
+package com.example.testgame.data.model.Obstacle.ShootEnemy
 
 import com.example.testgame.R
 

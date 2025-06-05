@@ -1,7 +1,6 @@
 package com.example.testgame.data.model.Obstacle
 
 import com.example.testgame.R
-import com.example.testgame.common.ObstacleBehavior
 import java.util.UUID
 
 open class Obstacle(

@@ -1,9 +1,9 @@
 package com.example.testgame.mapper
 
-import com.example.testgame.data.model.Obstacle.BattleShip.ShootEnemy
+import com.example.testgame.data.model.Obstacle.ShootEnemy.RaptorPlane
 import com.example.testgame.view.model.ShootEnemyModelUI
 
-fun ShootEnemy.toShootEnemyModelUI(): ShootEnemyModelUI {
+fun RaptorPlane.toShootEnemyModelUI(): ShootEnemyModelUI {
     return ShootEnemyModelUI(
         id = this.id,
         x = this.x,

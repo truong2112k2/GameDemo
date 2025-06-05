@@ -1,7 +1,7 @@
 package com.example.testgame.mapper
 
 import com.example.testgame.data.model.Bullet
-import com.example.testgame.data.model.Obstacle.BattleShip.EnemyBullet
+import com.example.testgame.data.model.Obstacle.ShootEnemy.EnemyBullet
 import com.example.testgame.view.model.BulletModelUI
 
 
