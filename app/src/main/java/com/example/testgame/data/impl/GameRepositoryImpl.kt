@@ -1,130 +1,81 @@
 package com.example.testgame.data.impl
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.util.Log
+import com.example.testgame.common.GameMode
 import com.example.testgame.data.GameUpdateResult
+import com.example.testgame.data.game_helper.GameCollisionHelper
+import com.example.testgame.data.game_helper.GameMovementHelper
+import com.example.testgame.data.game_helper.GameObstacleHelper
 import com.example.testgame.data.model.Bullet
 import com.example.testgame.data.model.Explode
 import com.example.testgame.data.model.Obstacle.ShootEnemy.EnemyBullet
-import com.example.testgame.data.model.Obstacle.ShootEnemy.RaptorPlane
-import com.example.testgame.data.model.Obstacle.FlyingSaucer
 import com.example.testgame.data.model.Obstacle.Obstacle
-import com.example.testgame.data.model.Obstacle.Rocket
-import com.example.testgame.data.model.Obstacle.ShootEnemy.LightningPlane
-import com.example.testgame.data.model.Obstacle.Stone
 import com.example.testgame.data.model.Plane
 import com.example.testgame.data.repository.IGameRepository
 import com.example.testgame.utils.BitmapUtils
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.math.max
-import kotlin.math.min
 
 @Singleton
 class GameRepositoryImpl @Inject constructor(
 
 ) : IGameRepository {
-
-    override fun updateStateGameNormal(
+    override fun updateStateGame(
         yourPlane: Plane,
         obstacles: List<Obstacle>,
         bullets: List<Bullet>,
         enemyBullets: List<EnemyBullet>,
         screenHeight: Float,
         screenWidth: Float,
-        context: Context?
+        context: Context?,
+        mode: GameMode
     ): GameUpdateResult {
-
 
         var gameOver = false
         val explosions = mutableListOf<Explode>()
 
-        // 1. Di chuyển obstacles
-        val updatedObstacles = obstacles.map { obstacle ->
-            obstacle.updatePosition()
-        }
+        // Di chuyển obstacle và bullet
+        val updatedObstacles = GameMovementHelper.updatePositionObstacles(obstacles)
+        val updatedBullets = GameMovementHelper. updatePositionBullets(bullets)
+        val movedOldEnemyBullets = GameMovementHelper. updatePositionEnemyBullets(enemyBullets)
 
-        // 2. Di chuyển player bullets
-        val updatedBullets = bullets.map { it.copy(y = it.y - it.speed) }
+        // Bắn đạn mới từ enemy theo mode
+        val newlyFiredEnemyBullets = GameObstacleHelper. generateEnemyBullets(mode, updatedObstacles)
 
-        // 3. Di chuyển enemy bullets cũ
-        val movedOldEnemyBullets = enemyBullets.map { it.copy(y = it.y + it.speed) }
-
-        // 4. Tạo đạn mới từ ShooterEnemy
-        val newlyFiredEnemyBullets = updatedObstacles
-            .filterIsInstance<RaptorPlane>()
-            .filter { (0..100).random() < 3 }
-            .map {
-                val bullet = it.shoot()
-                Log.d("ENEMY_SHOOT", "Enemy bắn ra đạn tại (${bullet.x}, ${bullet.y}) ")
-                bullet
-            }
-
-        // 5. Gộp và lọc đạn địch
         val updatedEnemyBullets = (movedOldEnemyBullets + newlyFiredEnemyBullets)
             .filter { it.y <= screenHeight }
 
-
         val planeBitmap = context?.let {
-            BitmapUtils.drawableToBitmap(
-                it,
-                yourPlane.image,
-                yourPlane.size.toInt(),
-                yourPlane.size.toInt()
-            )
+            BitmapUtils.drawableToBitmap(it, yourPlane.image, yourPlane.size.toInt(), yourPlane.size.toInt())
         }
 
-        gameOver = checkEnemyBulletHitsPlane(context, planeBitmap, updatedEnemyBullets, yourPlane, gameOver)
-        gameOver = checkPlaneCollisionWithObstacles(planeBitmap, updatedObstacles, context, yourPlane, gameOver)
+        // Kiểm tra va chạm đạn enemy với máy bay
+        gameOver = GameCollisionHelper.checkObstacleKillPlane(context, planeBitmap, updatedEnemyBullets, yourPlane, gameOver)
 
+        // Kiểm tra va chạm obstacle với máy bay
+        gameOver = GameCollisionHelper.checkPlaneCollisionWithObstacles(planeBitmap, updatedObstacles, context, yourPlane, gameOver)
+
+        // Xử lý đạn trúng obstacle
         val destroyed = mutableSetOf<Obstacle>()
         val remainingObstacles = mutableListOf<Obstacle>()
-
         var destroyedCount = 0
 
-        for (obstacle in updatedObstacles) {
-            var isHit = false
-            for (bullet in updatedBullets) {
-                val collideX = bullet.x < obstacle.x + obstacle.size && bullet.x + bullet.size > obstacle.x
-                val collideY = bullet.y < obstacle.y + obstacle.size && bullet.y + bullet.size > obstacle.y
+        val obstacleDestroy = GameCollisionHelper.checkPlaneKillObstacle(
+            updatedObstacles,
+            updatedBullets,
+            explosions,
+            destroyed,
+            destroyedCount,
+            screenHeight,
+            remainingObstacles
+        )
+        val remainingBullets = obstacleDestroy.first
+        destroyedCount = obstacleDestroy.second
 
-                if (collideX && collideY) {
-                    isHit = true
-                    explosions.add(
-                        Explode(
-                            x = obstacle.x,
-                            y = obstacle.y,
-                            size = obstacle.size.toInt()
-                        )
-                    )
-                    destroyed.add(obstacle)
-                    destroyedCount++
-                    break
-                }
-            }
-
-            if (!isHit && obstacle.y <= screenHeight) {
-                remainingObstacles.add(obstacle)
-            }
-        }
-
-
-        val remainingBullets = updatedBullets.filter { bullet ->
-            bullet.y > 0 && !destroyed.any {
-                bullet.x < it.x + it.size && bullet.x + bullet.size > it.x &&
-                bullet.y < it.y + it.size && bullet.y + bullet.size > it.y
-            }
-        }
-
+        // Sinh thêm obstacle theo mode
         val random = (0..100).random()
-
-
-        val newObstacles = if (random < 3) {
-            val newObstacle = getRandomObstacleNormal(screenWidth, obstacles)
-            Log.d("newObstacle", newObstacle::class.simpleName.toString())
-
-            remainingObstacles + newObstacle
+        val newObstacles = if ( GameObstacleHelper.shouldSpawnNewObstacle(mode, random)) {
+            remainingObstacles + GameObstacleHelper.getNewObstacle(mode, screenWidth, obstacles)
         } else {
             remainingObstacles
         }
@@ -135,297 +86,10 @@ class GameRepositoryImpl @Inject constructor(
             gameOver = gameOver,
             explosions = explosions,
             point = destroyedCount,
-            enemyBullets =  updatedEnemyBullets
+            enemyBullets = updatedEnemyBullets
         )
     }
 
-    override fun updateStateGameHard(
-        yourPlane: Plane,
-        obstacles: List<Obstacle>,
-        bullets: List<Bullet>,
-        enemyBullets: List<EnemyBullet>,
-        screenHeight: Float,
-        screenWidth: Float,
-        context: Context?
-    ): GameUpdateResult {
-
-
-        var gameOver = false
-        val explosions = mutableListOf<Explode>()
-
-        // 1. Di chuyển obstacles
-        val updatedObstacles = obstacles.map { obstacle ->
-            obstacle.updatePosition()
-        }
-
-        // 2. Di chuyển player bullets
-        val updatedBullets = bullets.map { it.copy(y = it.y - it.speed) }
-
-        // 3. Di chuyển enemy bullets cũ
-        val movedOldEnemyBullets = enemyBullets.map { it.copy(y = it.y + it.speed) }
-
-
-        val newlyFiredEnemyBullets = updatedObstacles
-            .filter { obstacle ->
-                (obstacle is RaptorPlane || obstacle is LightningPlane  )
-                        && (0..100).random() < 6
-            }
-            .mapNotNull { obstacle ->
-                val bullet = when (obstacle) {
-                    is RaptorPlane -> obstacle.shoot()
-                    is LightningPlane -> obstacle.shoot()
-                    else -> null
-                }
-                bullet?.also {
-                    Log.d(
-                        "ENEMY_SHOOT_updateStateGameMedium",
-                        "${it::class.simpleName.toString()} bắn ra đạn tại (${it.x}, ${it.y}) speed ${it.speed}"
-                    )
-                }
-            }
-
-
-        // 5. Gộp và lọc đạn địch
-        val updatedEnemyBullets = (movedOldEnemyBullets + newlyFiredEnemyBullets)
-            .filter { it.y <= screenHeight }
-
-
-        val planeBitmap = context?.let {
-            BitmapUtils.drawableToBitmap(
-                it,
-                yourPlane.image,
-                yourPlane.size.toInt(),
-                yourPlane.size.toInt()
-            )
-        }
-
-        gameOver = checkEnemyBulletHitsPlane(context, planeBitmap, updatedEnemyBullets, yourPlane, gameOver)
-        gameOver = checkPlaneCollisionWithObstacles(planeBitmap, updatedObstacles, context, yourPlane, gameOver)
-
-        val destroyed = mutableSetOf<Obstacle>()
-        val remainingObstacles = mutableListOf<Obstacle>()
-
-        var destroyedCount = 0
-
-        for (obstacle in updatedObstacles) {
-            var isHit = false
-            for (bullet in updatedBullets) {
-                val collideX = bullet.x < obstacle.x + obstacle.size && bullet.x + bullet.size > obstacle.x
-                val collideY = bullet.y < obstacle.y + obstacle.size && bullet.y + bullet.size > obstacle.y
-
-                if (collideX && collideY) {
-                    isHit = true
-                    explosions.add(
-                        Explode(
-                            x = obstacle.x,
-                            y = obstacle.y,
-                            size = obstacle.size.toInt()
-                        )
-                    )
-                    destroyed.add(obstacle)
-                    destroyedCount++
-                    break
-                }
-            }
-
-            if (!isHit && obstacle.y <= screenHeight) {
-                remainingObstacles.add(obstacle)
-            }
-        }
-
-
-        val remainingBullets = updatedBullets.filter { bullet ->
-            bullet.y > 0 && !destroyed.any {
-                bullet.x < it.x + it.size && bullet.x + bullet.size > it.x &&
-                        bullet.y < it.y + it.size && bullet.y + bullet.size > it.y
-            }
-        }
-
-        val random = (0..100).random()
-
-
-        val newObstacles = if (random < 5) {
-            val newObstacle = getRandomObstacleMedium(screenWidth, obstacles)
-            Log.d("newObstacle2", newObstacle::class.simpleName.toString() + "${newObstacle.speed}")
-
-            remainingObstacles + newObstacle
-        } else {
-            remainingObstacles
-        }
-
-        return GameUpdateResult(
-            obstacles = newObstacles,
-            bullets = remainingBullets,
-            gameOver = gameOver,
-            explosions = explosions,
-            point = destroyedCount,
-            enemyBullets =  updatedEnemyBullets
-        )
-    }
-}
-
-private fun checkPlaneCollisionWithObstacles(
-    planeBitmap: Bitmap?,
-    updatedObstacles: List<Obstacle>,
-    context: Context?,
-    yourPlane: Plane,
-    gameOver: Boolean
-): Boolean {
-    var gameOver1 = gameOver
-    if (planeBitmap != null) {
-        for (item in updatedObstacles) {
-            val obstacleBitmap = context?.let {
-                BitmapUtils.drawableToBitmap(
-                    it,
-                    item.image,
-                    item.size.toInt(),
-                    item.size.toInt()
-                )
-            }
-            val collideX =
-                yourPlane.x < item.x + item.size && yourPlane.x + yourPlane.size > item.x
-            val collideY =
-                yourPlane.y < item.y + item.size && yourPlane.y + yourPlane.size > item.y
-
-            if (collideX && collideY) {
-                val left = max(yourPlane.x, item.x).toInt()
-                val top = max(yourPlane.y, item.y).toInt()
-                val right = min(yourPlane.x + yourPlane.size, item.x + item.size).toInt()
-                val bottom = min(yourPlane.y + yourPlane.size, item.y + item.size).toInt()
-
-                for (x in left until right) {
-                    for (y in top until bottom) {
-                        val px = (x - yourPlane.x).toInt()
-                        val py = (y - yourPlane.y).toInt()
-                        val ox = (x - item.x).toInt()
-                        val oy = (y - item.y).toInt()
-
-                        val planePixel = BitmapUtils.isPixelSolid(planeBitmap, px, py)
-                        val obsPixel = BitmapUtils.isPixelSolid(obstacleBitmap, ox, oy)
-
-                        if (planePixel && obsPixel) {
-                            gameOver1 = true
-                            break
-                        }
-                    }
-                    if (gameOver1) break
-                }
-            }
-            if (gameOver1) break
-        }
-    }
-    return gameOver1
-}
-
-private fun checkEnemyBulletHitsPlane(
-    context: Context?,
-    planeBitmap: Bitmap?,
-    updatedEnemyBullets: List<EnemyBullet>,
-    yourPlane: Plane,
-    gameOver: Boolean
-): Boolean {
-    var gameOver1 = gameOver
-    if (context != null && planeBitmap != null) {
-        for (enemyBullet in updatedEnemyBullets) {
-
-            val bulletBitmap = BitmapUtils.drawableToBitmap(
-                context,
-                enemyBullet.image,
-                enemyBullet.size.toInt(),
-                enemyBullet.size.toInt()
-            )
-
-            val collideX = enemyBullet.x < yourPlane.x + yourPlane.size &&
-                    enemyBullet.x + enemyBullet.size > yourPlane.x
-            val collideY = enemyBullet.y < yourPlane.y + yourPlane.size &&
-                    enemyBullet.y + enemyBullet.size > yourPlane.y
-
-            if (collideX && collideY) {
-                val left = max(yourPlane.x, enemyBullet.x).toInt()
-                val top = max(yourPlane.y, enemyBullet.y).toInt()
-                val right = min(yourPlane.x + yourPlane.size, enemyBullet.x + enemyBullet.size).toInt()
-                val bottom = min(yourPlane.y + yourPlane.size, enemyBullet.y + enemyBullet.size).toInt()
-
-                for (x in left until right) {
-                    for (y in top until bottom) {
-                        val px = (x - yourPlane.x).toInt()
-                        val py = (y - yourPlane.y).toInt()
-                        val bx = (x - enemyBullet.x).toInt()
-                        val by = (y - enemyBullet.y).toInt()
-
-                        if (BitmapUtils.isPixelSolid(planeBitmap, px, py) &&
-                            BitmapUtils.isPixelSolid(bulletBitmap, bx, by)
-                        ) {
-                            gameOver1 = true
-                            break
-                        }
-                    }
-                    if (gameOver1) break
-                }
-            }
-
-            if (gameOver1) break
-        }
-    }
-    return gameOver1
-}
-
-fun getRandomObstacleNormal(screenWidth: Float, existingObstacles: List<Obstacle>, minDistance: Float = 50f): Obstacle {
-    val obstacleTypes = listOf<(Float) -> Obstacle>(
-        { x -> RaptorPlane(x = x, y = 0f) },
-        { x -> FlyingSaucer(x = x, y = 0f) },
-        { x -> Rocket(x = x, y = 0f) },
-        { x -> Stone(x = x, y = 0f) }
-    )
-
-    fun isFarEnough(newX: Float): Boolean {
-        return existingObstacles.all { existing ->
-            kotlin.math.abs(existing.x - newX) >= minDistance
-        }
-    }
-
-    var xPos: Float
-    var attempts = 0
-    do {
-        xPos = (0..screenWidth.toInt()).random().toFloat()
-        attempts++
-        if (attempts > 100) {
-            break
-        }
-    } while (!isFarEnough(xPos))
-
-    val obstacleFactory = obstacleTypes.random()
-    return obstacleFactory(xPos)
 }
 
 
-fun getRandomObstacleMedium(screenWidth: Float, existingObstacles: List<Obstacle>, minDistance: Float = 50f): Obstacle {
-
-
-    val obstacleTypes = listOf<(Float) -> Obstacle>(
-        { x -> RaptorPlane(x = x, y = 0f, speed = 100f ) },
-        { x -> FlyingSaucer(x = x, y = 0f, speed = 100f) },
-        { x -> Rocket(x = x, y = 0f , speed = 200f) },
-        { x -> Stone(x = x, y = 0f, speed = 100f) },
-        { x -> LightningPlane(x = x, y = 0f, speed = 100f) },
-    )
-
-    fun isFarEnough(newX: Float): Boolean {
-        return existingObstacles.all { existing ->
-            kotlin.math.abs(existing.x - newX) >= minDistance
-        }
-    }
-
-    var xPos: Float
-    var attempts = 0
-    do {
-        xPos = (0..screenWidth.toInt()).random().toFloat()
-        attempts++
-        if (attempts > 100) {
-            break
-        }
-    } while (!isFarEnough(xPos))
-
-    val obstacleFactory = obstacleTypes.random()
-    return obstacleFactory(xPos)
-}

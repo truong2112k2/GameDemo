@@ -95,7 +95,7 @@ class MainActivity : ComponentActivity() {
 fun FirstScreen( navController: NavController){
     Column(
         modifier = Modifier.fillMaxSize().background(
-            CustomBrush.horizontalBrush
+            CustomBrush.verticalBrush
         ),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -113,6 +113,8 @@ fun FirstScreen( navController: NavController){
                 onClick = {
                     navController.navigate(Route.SCREEN_EASY_ROUTE)
                 }
+                ,
+
             )
             CustomIconBox(
                 text = "HARD",
@@ -135,7 +137,7 @@ fun CustomIconBox(
     Box(
         modifier = Modifier
             .height(100.dp)
-            .border(1.dp, CustomBrush.verticalBrush ,RoundedCornerShape(8.dp))
+            .border(1.dp, CustomBrush.brightTextBrush ,RoundedCornerShape(8.dp))
             .clip(RoundedCornerShape(8.dp))
             .background(Color.Transparent)
             .clickable { onClick() }
@@ -147,7 +149,7 @@ fun CustomIconBox(
         Text(
             text, style = TextStyle(
                 fontSize = 34.sp,
-                color = Color.Black
+                brush = CustomBrush.brightTextBrush
             )
         )
     }

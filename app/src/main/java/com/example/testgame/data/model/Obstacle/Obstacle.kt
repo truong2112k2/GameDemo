@@ -1,5 +1,6 @@
 package com.example.testgame.data.model.Obstacle
 
+import android.graphics.Bitmap
 import com.example.testgame.R
 import java.util.UUID
 
@@ -10,6 +11,7 @@ open class Obstacle(
     val size: Float = 64f,
     val speed: Float = 8f,
     val image: Int = R.drawable.ic_rocket,
+    var cachedBitmap: Bitmap? = null
 
 ) {
 
@@ -21,8 +23,9 @@ open class Obstacle(
         size: Float = this.size,
         speed: Float = this.speed,
         image: Int = this.image,
+        cachedBitmap: Bitmap? = this.cachedBitmap
     ): Obstacle {
-        return Obstacle(id, x, y, size, speed, image)
+        return Obstacle(id, x, y, size, speed, image, cachedBitmap)
     }
 
     override fun equals(other: Any?): Boolean {

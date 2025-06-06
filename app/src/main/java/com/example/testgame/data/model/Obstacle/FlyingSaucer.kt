@@ -1,5 +1,6 @@
 package com.example.testgame.data.model.Obstacle
 
+import android.graphics.Bitmap
 import com.example.testgame.R
 
 class FlyingSaucer(
@@ -9,7 +10,17 @@ class FlyingSaucer(
     size: Float = 100f,
     speed: Float = 15f,
     image: Int = R.drawable.ic_fly_saucer,
-) : Obstacle(id = id, x = x, y = y, size = size, speed = speed, image = image) {
+    cachedBitmap: Bitmap? = null
+
+) : Obstacle(
+    id = id,
+    x = x,
+    y = y,
+    size = size,
+    speed = speed,
+    image = image,
+    cachedBitmap = cachedBitmap
+) {
 
     override fun updatePosition(): Obstacle {
         val newY = y + speed * 0.2f  // bay nhanh hơn bình thường
@@ -30,8 +41,9 @@ class FlyingSaucer(
         size: Float,
         speed: Float,
         image: Int,
+        cachedBitmap: Bitmap?
     ): FlyingSaucer {
-        return FlyingSaucer(id, x, y, size, speed, image)
+        return FlyingSaucer(id, x, y, size, speed, image, cachedBitmap)
     }
 }
 

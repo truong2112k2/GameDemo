@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.testgame.common.GameMode
 import com.example.testgame.data.model.Plane
 import com.example.testgame.data.repository.IGameRepository
 import com.example.testgame.mapper.toBullet
@@ -61,7 +62,7 @@ class GameHardVM @Inject constructor(
 
 
     private fun updateGameState(context: Context) {
-        val result = gameIGameRepository.updateStateGameHard(
+        val result = gameIGameRepository.updateStateGame(
             plane.toPlane(),
             obstacles.map {
                 it.toObstacle()
@@ -74,7 +75,8 @@ class GameHardVM @Inject constructor(
             },
             screenHeight,
             screenWidth,
-            context
+            context,
+            GameMode.HARD
         )
         if (obstacles != result.obstacles) {
             obstacles.clear()

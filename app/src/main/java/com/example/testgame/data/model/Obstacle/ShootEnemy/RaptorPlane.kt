@@ -1,6 +1,7 @@
 package com.example.testgame.data.model.Obstacle.ShootEnemy
 
 
+import android.graphics.Bitmap
 import com.example.testgame.R
 import com.example.testgame.data.model.Obstacle.Obstacle
 import java.util.UUID
@@ -11,9 +12,10 @@ class RaptorPlane(
      y: Float = 0f,
      size: Float = 80f,
      speed: Float = listOf(10f, 20f, 30f, 40f, 50f).random(),
-
      image: Int = R.drawable.ic_spaceship,
-) : Obstacle( id,  x, y, size, speed, image) {
+     cachedBitmap: Bitmap? = null
+
+) : Obstacle( id,  x, y, size, speed, image,cachedBitmap) {
 
 
 
@@ -30,7 +32,8 @@ class RaptorPlane(
         y: Float,
         size: Float,
         speed: Float,
-        image: Int
+        image: Int,
+        cachedBitmap: Bitmap?
     ): Obstacle {
         return RaptorPlane(
             id,
@@ -38,12 +41,15 @@ class RaptorPlane(
             y,
             size,
             speed,
-            image
+            image,
+            cachedBitmap
         )
     }
 
 
     override fun updatePosition(): Obstacle {
+
+
         val newX = x + (3 * kotlin.math.sin(y / 30)).toFloat()
         val newY = y + (1.5 * kotlin.math.sin(x / 50)).toFloat()
         return RaptorPlane(

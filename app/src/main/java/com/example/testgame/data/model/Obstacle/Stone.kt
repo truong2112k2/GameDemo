@@ -1,5 +1,6 @@
 package com.example.testgame.data.model.Obstacle
 
+import android.graphics.Bitmap
 import com.example.testgame.R
 import java.util.UUID
 
@@ -11,6 +12,7 @@ class Stone(
     size: Float = 80f,
     speed: Float = 8f,
     image: Int = R.drawable.ic_stone,
+    cachedBitmap: Bitmap? = null
 
 
 ) : Obstacle(
@@ -20,19 +22,12 @@ class Stone(
     size = size,
     speed = speed,
     image = image,
+    cachedBitmap = cachedBitmap
 ) {
 
     override fun updatePosition(): Obstacle {
-        /*
-         val newY = y + speed
-        return Rocket(
-            x = x,
-            y = newY,
-            size = size,
-            speed = speed,
-            image = image,
-        )
-         */
+
+
         val newY = y + speed
         return Stone(
             x = x,
@@ -51,7 +46,8 @@ class Stone(
         size: Float,
         speed: Float,
         image: Int,
+        cachedBitmap: Bitmap?
     ): Stone {
-        return Stone(id, x, y, size, speed, image)
+        return Stone(id, x, y, size, speed, image,cachedBitmap)
     }
 }

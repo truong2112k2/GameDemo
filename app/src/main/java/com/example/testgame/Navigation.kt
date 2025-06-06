@@ -30,6 +30,7 @@ fun CustomNavigation(
             val isGameOver by vm.isGameOver.collectAsState()
             val point by vm.score.collectAsState()
             GameNormalScreen(
+                navController = navController,
                 context = context,
                 plane = vm.plane,
                 obstacles = vm.obstacles,
@@ -48,6 +49,7 @@ fun CustomNavigation(
             val point by vm2.score.collectAsState()
 
             GameMediumScreen(
+                navController = navController,
                 context = context,
                 plane = vm2.plane,
                 obstacles = vm2.obstacles,

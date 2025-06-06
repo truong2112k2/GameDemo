@@ -51,9 +51,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.navigation.NavController
 import com.example.testgame.R
 import com.example.testgame.common.CustomBrush
 import com.example.testgame.common.Font
+import com.example.testgame.common.Route
 import com.example.testgame.view.components.CustomDialogWin
 import com.example.testgame.view.components.GameCanvas
 import com.example.testgame.view.components.GameTopBar
@@ -70,6 +72,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun GameNormalScreen(
+    navController: NavController,
     context: Context,
     plane: PlaneModelUI,
     obstacles: List<ObstacleModelUI>,
@@ -194,6 +197,13 @@ fun GameNormalScreen(
         isGameDone,
         text = "Win",
         onConfirm = {
+            navController.navigate(Route.SCREEN_FIRST_ROUTE) {
+                popUpTo(Route.SCREEN_FIRST_ROUTE) {
+                    inclusive = false // giữ lại SCREEN_FIRST_ROUTE nếu đã có
+                }
+                launchSingleTop = true // không tạo thêm instance nếu đã ở top
+            }
+
 
         },
         onReplay = {
@@ -205,7 +215,7 @@ fun GameNormalScreen(
 
         },
         score = score,
-        brush = CustomBrush.horizontalBrush
+        brush = CustomBrush.brightTextBrush
     )
 
 
@@ -213,7 +223,21 @@ fun GameNormalScreen(
         isGameOver,
         text = "Failed",
         onConfirm = {
+            navController.navigate(Route.SCREEN_FIRST_ROUTE) {
+                popUpTo(Route.SCREEN_FIRST_ROUTE) {
+                    inclusive = false // giữ lại SCREEN_FIRST_ROUTE nếu đã có
+                }
+                launchSingleTop = true // không tạo thêm instance nếu đã ở top
+            }
 
+//            navController.navigate(Route.SCREEN_FIRST_ROUTE){
+//                launchSingleTop
+//                popUpTo(
+//                    Route.SCREEN_EASY_ROUTE
+//                ){
+//                    inclusive = true
+//                }
+//            }
         },
         onReplay = {
             onEventClick(ClickEvent.ResetGame(context, width, height))
@@ -225,7 +249,7 @@ fun GameNormalScreen(
 
         },
         score = score,
-        brush = CustomBrush.horizontalBrush
+        brush = CustomBrush.brightTextBrush
     )
 
 }

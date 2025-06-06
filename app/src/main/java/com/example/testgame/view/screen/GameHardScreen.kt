@@ -1,6 +1,7 @@
 package com.example.testgame.view.screen
 
 import android.content.Context
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,7 +23,9 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.testgame.common.CustomBrush
+import com.example.testgame.common.Route
 import com.example.testgame.view.components.CustomDialogWin
 import com.example.testgame.view.components.GameCanvas
 import com.example.testgame.view.components.GameTopBar
@@ -39,6 +42,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun GameMediumScreen(
+    navController: NavController,
     context: Context,
     plane: PlaneModelUI,
     obstacles: List<ObstacleModelUI>,
@@ -119,6 +123,7 @@ fun GameMediumScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(CustomBrush.galaxyVerticalBrush)
             .statusBarsPadding()
             .onGloballyPositioned {
                 height = it.size.height.toFloat()
@@ -159,7 +164,22 @@ fun GameMediumScreen(
         isGameDone,
         text = "Win",
         onConfirm = {
-
+            /*
+            navController.navigate(Route.SCREEN_FIRST_ROUTE) {
+                popUpTo(Route.SCREEN_FIRST_ROUTE) {
+                    inclusive = false // giữ lại SCREEN_FIRST_ROUTE nếu đã có
+                }
+                launchSingleTop = true // không tạo thêm instance nếu đã ở top
+            }
+             */
+            navController.navigate(Route.SCREEN_FIRST_ROUTE){
+                 popUpTo(
+                    Route.SCREEN_HARD_ROUTE
+                ){
+                    inclusive = false
+                }
+                launchSingleTop = true
+            }
         },
         onReplay = {
             onEventClick(ClickEvent.ResetGame(context, width, height))
@@ -170,7 +190,7 @@ fun GameMediumScreen(
 
         },
         score = score,
-        brush = CustomBrush.horizontalBrush
+        brush =  CustomBrush.brightTextBrush
     )
 
 
@@ -178,7 +198,14 @@ fun GameMediumScreen(
         isGameOver,
         text = "Failed",
         onConfirm = {
-
+            navController.navigate(Route.SCREEN_FIRST_ROUTE){
+                popUpTo(
+                    Route.SCREEN_HARD_ROUTE
+                ){
+                    inclusive = false
+                }
+                launchSingleTop = true
+            }
         },
         onReplay = {
             onEventClick(ClickEvent.ResetGame(context, width, height))
@@ -190,7 +217,7 @@ fun GameMediumScreen(
 
         },
         score = score,
-        brush = CustomBrush.horizontalBrush
+        brush = CustomBrush.brightTextBrush
     )
 
 }
